@@ -1,7 +1,8 @@
 module Signatures
   module Base
     def create(consumer_secret, token_secret, base)
-      @consumer_secret, @token_secret = consumer_secret, token_secret
+      @consumer_secret = consumer_secret
+      @token_secret = token_secret
       ::Base64.encode64(digest(secret, base)).chomp.delete("\n")
     end
 

@@ -207,26 +207,65 @@ describe SimpleOAuth::Header do
 
   describe '#signature' do
     context 'calls the appropriate signature method' do
+      specify 'when using HMAC-SHA256' do
+        header = SimpleOAuth::Header.new(:get, 'https://api.twitter.com/1/statuses/friends.json', {}, :signature_method => 'HMAC-SHA256')
+        expect(Signatures::ENCODERS['HMAC-SHA256']).to receive(:create).once.and_return('HMAC_SHA256_SIGNATURE')
+        expect(header.send(:signature)).to eq 'HMAC_SHA256_SIGNATURE'
+      end
+
       specify 'when using HMAC-SHA1' do
         header = SimpleOAuth::Header.new(:get, 'https://api.twitter.com/1/statuses/friends.json', {}, :signature_method => 'HMAC-SHA1')
-        # expect(header).to receive(:hmac_sha1_signature).once.and_return('HMAC_SHA1_SIGNATURE')
         expect(Signatures::ENCODERS['HMAC-SHA1']).to receive(:create).once.and_return('HMAC_SHA1_SIGNATURE')
         expect(header.send(:signature)).to eq 'HMAC_SHA1_SIGNATURE'
       end
 
       specify 'when using RSA-SHA1' do
         header = SimpleOAuth::Header.new(:get, 'https://api.twitter.com/1/statuses/friends.json', {}, :signature_method => 'RSA-SHA1')
-        # expect(header).to receive(:rsa_sha1_signature).once.and_return('RSA_SHA1_SIGNATURE')
         expect(Signatures::ENCODERS['RSA-SHA1']).to receive(:create).once.and_return('RSA_SHA1_SIGNATURE')
         expect(header.send(:signature)).to eq 'RSA_SHA1_SIGNATURE'
       end
 
       specify 'when using PLAINTEXT' do
         header = SimpleOAuth::Header.new(:get, 'https://api.twitter.com/1/statuses/friends.json', {}, :signature_method => 'PLAINTEXT')
-        # expect(header).to receive(:plaintext_signature).once.and_return('PLAINTEXT_SIGNATURE')
         expect(Signatures::ENCODERS['PLAINTEXT']).to receive(:create).once.and_return('PLAINTEXT_SIGNATURE')
         expect(header.send(:signature)).to eq 'PLAINTEXT_SIGNATURE'
       end
+    end
+  end
+ # OAuth oauth_consumer_key="Zxm34o8aaAs4e",
+ # oauth_nonce="9aw34as32pcxmzhjw0934juaf9",
+ # oauth_signature="SDfkASdklq3p4oiasdfg",
+ # oauth_signature_method="HMAC-SHA256",
+ # oauth_timestamp="1328822532",
+ # oauth_token="65346-Ajk0asd0AWJUEUpoifdsWQ4uLdsfDg",
+ # oauth_version="1.0"
+  describe '#hmac_sha256_signature' do
+    it 'reproduces a successful API GET' do
+      options = {
+        :consumer_key => 'Zxm34o8aaAs4e',
+        :consumer_secret => '3d0vcHyUiiqADpWxolW8nlDIpSWMlyK7YNgc5Qna2M',
+        :nonce => '547fed103e122eecf84c080843eedfe6',
+        :signature_method => 'HMAC-SHA256',
+        :timestamp => '1286830180',
+        :token => '201425800-Sv4sTcgoffmHGkTCue0JnURT8vrm4DiFAkeFNDkh',
+        :token_secret => 'T5qa1tF57tfDzKmpM89DHsNuhgOY4NT6DlNLsTFcuQ',
+      }
+      header = SimpleOAuth::Header.new(:get, 'https://api.example.com/1/statuses/friends.json', {}, options)
+      expect(header.to_s).to eq 'OAuth oauth_consumer_key="Zxm34o8aaAs4e", oauth_nonce="547fed103e122eecf84c080843eedfe6", oauth_signature="lb%2BMBgiXlBDNTM%2FLTNXwqT5zrpLBIxbKpUSgMcw56qk%3D", oauth_signature_method="HMAC-SHA256", oauth_timestamp="1286830180", oauth_token="201425800-Sv4sTcgoffmHGkTCue0JnURT8vrm4DiFAkeFNDkh", oauth_version="1.0"'
+    end
+
+    it 'reproduces a successful API POST' do
+      options = {
+        :consumer_key => 'Zxm34o8aaAs4e',
+        :consumer_secret => '3d0vcHyUiiqADpWxolW8nlDIpSWMlyK7YNgc5Qna2M',
+        :nonce => '547fed103e122eecf84c080843eedfe6',
+        :signature_method => 'HMAC-SHA256',
+        :timestamp => '1286830181',
+        :token => '201425800-Sv4sTcgoffmHGkTCue0JnURT8vrm4DiFAkeFNDkh',
+        :token_secret => 'T5qa1tF57tfDzKmpM89DHsNuhgOY4NT6DlNLsTFcuQ',
+      }
+      header = SimpleOAuth::Header.new(:post, 'https://api.example.com/1/statuses/update.json', {:status => 'hi, again'}, options)
+      expect(header.to_s).to eq 'OAuth oauth_consumer_key="Zxm34o8aaAs4e", oauth_nonce="547fed103e122eecf84c080843eedfe6", oauth_signature="5%2FGzpeYP4Dk%2FV4XmdNBO2%2FOGwr4X5nF%2F1qXjCRLgzhg%3D", oauth_signature_method="HMAC-SHA256", oauth_timestamp="1286830181", oauth_token="201425800-Sv4sTcgoffmHGkTCue0JnURT8vrm4DiFAkeFNDkh", oauth_version="1.0"'
     end
   end
 
