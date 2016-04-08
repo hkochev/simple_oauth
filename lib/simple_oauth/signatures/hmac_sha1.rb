@@ -3,6 +3,7 @@ module Signatures
     include Base
 
   protected
+
     def digest(secret, base)
       OpenSSL::HMAC.digest(OpenSSL::Digest::SHA1.new, secret, base)
     end
